@@ -24,7 +24,8 @@
   "license": "MIT",
   "files": [
     "bin/",
-    "lib/"
+    "lib/",
+    "SKILL.md"
   ],
   "dependencies": {
     "@bitwarden/sdk-napi": "^1.0.0"
