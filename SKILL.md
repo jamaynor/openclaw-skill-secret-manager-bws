@@ -2,7 +2,7 @@
 name: secret-manager-bws
 description: >
   Manage and inject secrets using Bitwarden Secrets Manager (BWS). Use this
-  skill for ALL secret management — storing API keys, connection strings, tokens,
+  skill for ALL secret management - storing API keys, connection strings, tokens,
   and credentials. Secrets must NEVER be stored anywhere else (not in CLAUDE.md,
   .env files, config files, shell scripts, or any other file). Use secrets-bws
   to create, update, delete, and organize secrets. Use bws-mcp-wrapper to inject
@@ -42,7 +42,7 @@ are mandatory:
    API keys, database connection strings, tokens, passwords, and any other
    credentials.
 
-2. **Never store secrets anywhere else** — not in `CLAUDE.md`, `.env` files,
+2. **Never store secrets anywhere else** - not in `CLAUDE.md`, `.env` files,
    `mcporter.json`, `start.sh` inline values, shell scripts, environment files,
    or any other file on disk.
 
@@ -58,7 +58,7 @@ are mandatory:
    ```
 
 5. **To inject secrets into MCP servers**, use `bws-mcp-wrapper` in
-   `mcporter.json` — never inline the value:
+   `mcporter.json` - never inline the value:
    ```json
    {
      "command": "bws-mcp-wrapper",
@@ -85,27 +85,27 @@ are mandatory:
    ```
 
 7. **When a user asks you to configure any credential**, do not ask them to
-   paste it into a file — use `secrets-bws set` and store it in BWS.
+   paste it into a file - use `secrets-bws set` and store it in BWS.
 
 ## Prerequisites
 
 - `BWS_ACCESS_TOKEN` environment variable set (machine account token)
 - `BWS_ORGANIZATION_ID` environment variable set (organization UUID)
 
-No additional CLI tools required — the Bitwarden SDK is bundled as an npm
+No additional CLI tools required - the Bitwarden SDK is bundled as an npm
 dependency.
 
 ## How It Works
 
-- **`secrets-bws`** — management CLI: create, read, update, delete secrets and
+- **`secrets-bws`** - management CLI: create, read, update, delete secrets and
   manage projects. Used by agents and in scripts.
-- **`bws-mcp-wrapper`** — wraps MCP server launch commands, fetching secrets at
+- **`bws-mcp-wrapper`** - wraps MCP server launch commands, fetching secrets at
   startup and injecting them as env vars or CLI args. Used in `mcporter.json`.
 
 Both tools authenticate using `BWS_ACCESS_TOKEN` and `BWS_ORGANIZATION_ID` via
 the bundled `@bitwarden/sdk-napi` SDK. No `bws` CLI install required.
 
-## CLI Reference — secrets-bws
+## CLI Reference - secrets-bws
 
 ```bash
 # List all secrets with project assignments (columnar table)
@@ -117,7 +117,7 @@ secrets-bws list --project my-project
 # Machine-readable JSON output
 secrets-bws list --json
 
-# Get a secret value (prints to stdout — use in scripts)
+# Get a secret value (prints to stdout - use in scripts)
 secrets-bws get <key>
 
 # Create or update a secret (auto-creates project if needed)
@@ -145,7 +145,7 @@ secrets-bws projects create <name>
 secrets-bws projects delete <name>
 ```
 
-## CLI Reference — bws-mcp-wrapper
+## CLI Reference - bws-mcp-wrapper
 
 ```bash
 # Inject secret as an env var and launch server

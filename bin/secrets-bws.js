@@ -81,7 +81,7 @@ async function cmdList(flags) {
   const projectList  = await client.projects().list(orgId);
   const projectIdMap = buildProjectIdMap(projectList.data);
 
-  // fetchAllSecrets uses getByIds to get projectId — SDK list() stub omits it
+  // fetchAllSecrets uses getByIds to get projectId - SDK list() stub omits it
   let secrets = await fetchAllSecrets(client, orgId);
 
   if (flags.project) {
@@ -251,7 +251,7 @@ function cmdHelp() {
   const row = (cmd, desc) => console.log(`${C(cmd, W.cmd)}  ${desc}`);
 
   console.log();
-  console.log('secrets-bws — Bitwarden Secrets Manager CLI for OpenClaw');
+  console.log('secrets-bws - Bitwarden Secrets Manager CLI for OpenClaw');
   console.log();
   console.log(`${C('COMMAND', W.cmd)}  DESCRIPTION`);
   console.log(div);

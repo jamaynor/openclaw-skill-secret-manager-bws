@@ -141,14 +141,16 @@ describe('secrets-bws integration', { skip: SKIP }, () => {
 describe('secrets-bws-mcp-wrapper integration', { skip: SKIP }, () => {
   const WRAPPER_KEY = `SECRETS_BWS_WRAPPER_TEST_${Date.now()}`;
 
+  const WRAPPER_PROJECT = `secrets-bws-test-wrapper-${Date.now()}`;
+
   before(() => {
     // Machine accounts require a project to create secrets
-    secrets(`set ${WRAPPER_KEY} "wrapper-test-value" --project "secrets-bws-test-wrapper"`);
+    secrets(`set ${WRAPPER_KEY} "wrapper-test-value" --project "${WRAPPER_PROJECT}"`);
   });
 
   after(() => {
     try { secrets(`delete ${WRAPPER_KEY}`); } catch (_) {}
-    try { secrets(`projects delete "secrets-bws-test-wrapper"`); } catch (_) {}
+    try { secrets(`projects delete "${WRAPPER_PROJECT}"`); } catch (_) {}
   });
 
   it('injects secret as environment variable', () => {

@@ -27,9 +27,16 @@ describe('parseFlags', () => {
     assert.deepEqual(rest, []);
   });
 
-  it('treats trailing flag with no value as boolean', () => {
-    const { flags } = parseFlags(['--note']);
-    assert.equal(flags.note, true);
+  it('throws when a value-taking flag has no value', () => {
+    assert.throws(
+      () => parseFlags(['--note']),
+      /--note requires a value/
+    );
+  });
+
+  it('boolean flags still work with no value (--json)', () => {
+    const { flags } = parseFlags(['--json']);
+    assert.equal(flags.json, true);
   });
 
   it('collects positional args into rest', () => {

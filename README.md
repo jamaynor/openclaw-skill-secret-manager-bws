@@ -1,13 +1,13 @@
 # openclaw-skill-secret-manager-bws
 
 An [OpenClaw](https://openclaw.ai) skill that keeps every credential your AI
-agent touches out of files, out of version control, and out of plain sight —
+agent touches out of files, out of version control, and out of plain sight -
 stored securely in [Bitwarden Secrets Manager](https://bitwarden.com/products/secrets-manager/)
 and fetched at runtime, only when needed.
 
 ## The Problem
 
-AI agents need credentials to do useful work — database connection strings, API
+AI agents need credentials to do useful work - database connection strings, API
 keys, tokens. Those credentials have to come from somewhere. The tempting
 options all have the same flaw: they end up on disk.
 
@@ -38,7 +38,7 @@ discard it. Nothing is written to disk.
 
 ## Use Cases
 
-### Use case 1 — Your agent needs a database
+### Use case 1 - Your agent needs a database
 
 You're using a PostgreSQL MCP server. Without this skill, the connection string
 sits in `mcporter.json`:
@@ -69,7 +69,7 @@ secrets-bws set STRAT_DB_URL "postgresql://user:s3cr3t@host/db" --project strate
 the value directly to the server process. The connection string never touches
 the filesystem.
 
-### Use case 2 — Your Docker container needs secrets at startup
+### Use case 2 - Your Docker container needs secrets at startup
 
 A gateway service runs in Docker and needs credentials before it can start. The
 conventional approach injects them as environment variables in `docker-compose.yml`
@@ -88,7 +88,7 @@ exec node server.js
 No `.env` file. No secrets in Compose. Rotate a credential in Bitwarden and
 the next container restart picks it up automatically.
 
-### Use case 3 — Your agent manages secrets on your behalf
+### Use case 3 - Your agent manages secrets on your behalf
 
 Because this skill is installed and the agent knows to use it, you can give the
 agent natural language instructions:
@@ -99,10 +99,10 @@ agent natural language instructions:
 
 > "What secrets do we have for the strategy project?"
 
-The agent uses `secrets-bws` to carry out those instructions directly —
+The agent uses `secrets-bws` to carry out those instructions directly -
 no copy-pasting values into files, no manual Bitwarden UI work.
 
-### Use case 4 — Keeping secrets organized as projects grow
+### Use case 4 - Keeping secrets organized as projects grow
 
 As the number of secrets grows, `secrets-bws list` gives a full picture of
 what exists and where it lives:
@@ -159,7 +159,7 @@ secrets-bws list
 secrets-bws list --project lmb-metrics
 secrets-bws list --json
 
-# Get a secret value (stdout — safe for use in scripts)
+# Get a secret value (stdout - safe for use in scripts)
 secrets-bws get STRAT_DB_URL
 
 # Create or update a secret (upsert)
