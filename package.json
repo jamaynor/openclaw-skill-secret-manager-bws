@@ -1,0 +1,27 @@
+{
+  "name": "openclaw-skill-secret-manager-bws",
+  "version": "1.0.0",
+  "description": "OpenClaw skill for Bitwarden Secrets Manager (BWS) — secure secret injection for MCP servers and agent tools",
+  "main": "index.js",
+  "bin": {
+    "bws-mcp-wrapper": "./bin/bws-mcp-wrapper.js"
+  },
+  "scripts": {
+    "test": "node test/connection.js"
+  },
+  "keywords": [
+    "openclaw",
+    "skill",
+    "bitwarden",
+    "bws",
+    "secrets",
+    "mcp",
+    "secret-manager"
+  ],
+  "author": "jamaynor",
+  "license": "MIT",
+  "dependencies": {},
+  "engines": {
+    "node": ">=18"
+  }
+}
