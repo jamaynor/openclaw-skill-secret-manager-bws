@@ -11,7 +11,7 @@ metadata:
     "openclaw":
       {
         "emoji": "🔐",
-        "requires": { "bins": ["bws", "jq"] },
+        "requires": { "bins": ["bws"] },
         "install":
           [
             {
