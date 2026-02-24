@@ -11,7 +11,7 @@ metadata:
     "openclaw":
       {
         "emoji": "🔐",
-        "requires": { "bins": ["bws"] },
+        "requires": {},
         "install":
           [
             {
@@ -34,15 +34,15 @@ in config files.
 
 ## Prerequisites
 
-- `bws` CLI installed and `BWS_ACCESS_TOKEN` available in the environment
-- `jq` installed
+- `BWS_ACCESS_TOKEN` environment variable set (machine account token)
 
 ## How It Works
 
 The `bws-mcp-wrapper` binary:
-1. Fetches the named secret from BWS using `BWS_ACCESS_TOKEN`
-2. Injects it as an environment variable
-3. Launches the target MCP server process
+1. Authenticates with Bitwarden SM using `BWS_ACCESS_TOKEN` (via the bundled `@bitwarden/sdk-napi` — no CLI install needed)
+2. Fetches the named secret(s) from BWS
+3. Injects them as environment variables or CLI arguments
+4. Launches the target MCP server process
 
 ## Usage in mcporter.json
 

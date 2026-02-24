@@ -54,8 +54,9 @@ npx clawhub install secret-manager-bws
 
 ## Prerequisites
 
-- [`bws` CLI](https://github.com/bitwarden/sdk-sm) installed and on PATH
 - `BWS_ACCESS_TOKEN` environment variable set (machine account token)
+
+No additional CLI tools required — the Bitwarden SDK is bundled as an npm dependency.
 
 ## Usage
 

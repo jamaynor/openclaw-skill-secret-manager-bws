@@ -20,7 +20,9 @@
   ],
   "author": "jamaynor",
   "license": "MIT",
-  "dependencies": {},
+  "dependencies": {
+    "@bitwarden/sdk-napi": "^1.0.0"
+  },
   "engines": {
     "node": ">=18"
   }

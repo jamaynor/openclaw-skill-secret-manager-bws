@@ -13,7 +13,10 @@
 
 'use strict';
 
-const { execFileSync, spawn } = require('child_process');
+const { spawn } = require('child_process');
+const os = require('os');
+const path = require('path');
+const { BitwardenClient, ClientSettings, DeviceType, LogLevel } = require('@bitwarden/sdk-napi');
 
 // ---------------------------------------------------------------------------
 // Parse args
@@ -60,7 +63,7 @@ while (i < wrapperArgs.length) {
 }
 
 // ---------------------------------------------------------------------------
-// Fetch secrets from BWS
+// Fetch secrets from BWS via SDK
 // ---------------------------------------------------------------------------
 const BWS_ACCESS_TOKEN = process.env.BWS_ACCESS_TOKEN;
 if (!BWS_ACCESS_TOKEN) {
@@ -68,66 +71,79 @@ if (!BWS_ACCESS_TOKEN) {
   process.exit(1);
 }
 
-let secretsJson;
-try {
-  secretsJson = execFileSync('bws', ['secret', 'list', '--access-token', BWS_ACCESS_TOKEN, '--output', 'json'], {
-    encoding: 'utf8',
-    stdio: ['ignore', 'pipe', 'pipe'],
+async function fetchSecrets(keys) {
+  const settings = new ClientSettings({
+    apiUrl: 'https://api.bitwarden.com',
+    identityUrl: 'https://identity.bitwarden.com',
+    userAgent: 'bws-mcp-wrapper',
+    deviceType: DeviceType.SDK,
   });
-} catch (err) {
-  console.error('ERROR: Failed to fetch secrets from BWS:', err.message);
-  process.exit(1);
+
+  const stateFile = path.join(os.tmpdir(), '.bws-mcp-wrapper-state');
+  const client = new BitwardenClient(settings, LogLevel.Error);
+
+  await client.auth().loginAccessToken(BWS_ACCESS_TOKEN, stateFile);
+
+  const list = await client.secrets().list();
+  // list.data contains [{ id, key, organizationId }] — no values
+  const index = {};
+  for (const entry of list.data) {
+    index[entry.key] = entry.id;
+  }
+
+  const result = {};
+  for (const key of keys) {
+    const id = index[key];
+    if (!id) {
+      console.error(`ERROR: Secret '${key}' not found in Bitwarden SM`);
+      process.exit(1);
+    }
+    const secret = await client.secrets().get(id);
+    result[key] = secret.value;
+  }
+
+  return result;
 }
 
-let secrets;
-try {
-  secrets = JSON.parse(secretsJson);
-} catch (err) {
-  console.error('ERROR: Failed to parse BWS output as JSON');
-  process.exit(1);
-}
+// ---------------------------------------------------------------------------
+// Main
+// ---------------------------------------------------------------------------
+const neededKeys = injections.map(inj => inj.bwsKey);
 
-function getSecret(key) {
-  const entry = secrets.find(s => s.key === key);
-  if (!entry || !entry.value) {
-    console.error(`ERROR: Secret '${key}' not found in Bitwarden SM`);
+fetchSecrets(neededKeys).then(secretValues => {
+  // Build env and extra args
+  const env = { ...process.env };
+  const extraArgs = [];
+
+  for (const { bwsKey, mode, target } of injections) {
+    const value = secretValues[bwsKey];
+    if (mode === 'env') {
+      env[target] = value;
+    } else {
+      extraArgs.push(target, value);
+    }
+  }
+
+  // Launch the MCP server
+  const [cmd, ...args] = serverCmd;
+  const finalArgs = [...args, ...extraArgs];
+
+  const child = spawn(cmd, finalArgs, {
+    env,
+    stdio: 'inherit',
+    shell: false,
+  });
+
+  child.on('error', err => {
+    console.error(`ERROR: Failed to launch '${cmd}':`, err.message);
     process.exit(1);
-  }
-  return entry.value;
-}
+  });
 
-// ---------------------------------------------------------------------------
-// Build env and extra args
-// ---------------------------------------------------------------------------
-const env = { ...process.env };
-const extraArgs = [];
+  child.on('close', code => {
+    process.exit(code ?? 0);
+  });
 
-for (const { bwsKey, mode, target } of injections) {
-  const value = getSecret(bwsKey);
-  if (mode === 'env') {
-    env[target] = value;
-  } else {
-    extraArgs.push(target, value);
-  }
-}
-
-// ---------------------------------------------------------------------------
-// Launch the MCP server
-// ---------------------------------------------------------------------------
-const [cmd, ...args] = serverCmd;
-const finalArgs = [...args, ...extraArgs];
-
-const child = spawn(cmd, finalArgs, {
-  env,
-  stdio: 'inherit',
-  shell: false,
-});
-
-child.on('error', err => {
-  console.error(`ERROR: Failed to launch '${cmd}':`, err.message);
+}).catch(err => {
+  console.error('ERROR: Failed to fetch secrets from Bitwarden SM:', err.message);
   process.exit(1);
-});
-
-child.on('close', code => {
-  process.exit(code ?? 0);
 });
