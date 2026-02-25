@@ -11,8 +11,8 @@
  *   bws-mcp-wrapper --secret K1 --env V1 --secret K2 --env V2 -- npx some-mcp-server
  *
  * Required environment variables:
- *   BWS_ACCESS_TOKEN      Bitwarden SM machine account token
- *   BWS_ORGANIZATION_ID   Bitwarden organization UUID
+ *   HAL_BWS_ACCESS_TOKEN      Bitwarden SM machine account token
+ *   HAL_BWS_ORGANIZATION_ID   Bitwarden organization UUID
  */
 
 'use strict';
@@ -117,6 +117,11 @@ async function main() {
     } else {
       extraArgs.push(target, value);
     }
+  }
+
+  const argModeKeys = injections.filter(inj => inj.mode === 'arg').map(inj => inj.bwsKey);
+  if (argModeKeys.length > 0) {
+    console.error(`WARN: --arg mode injects secrets as CLI arguments. These may be visible in process listings (ps, top). Consider --env mode for sensitive values. Keys: ${argModeKeys.join(', ')}`);
   }
 
   const [cmd, ...args] = serverCmd;

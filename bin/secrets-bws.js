@@ -25,8 +25,8 @@
  *   Matching is case-insensitive.
  *
  * Required environment variables:
- *   BWS_ACCESS_TOKEN      Bitwarden SM machine account token
- *   BWS_ORGANIZATION_ID   Bitwarden organization UUID
+ *   HAL_BWS_ACCESS_TOKEN      Bitwarden SM machine account token
+ *   HAL_BWS_ORGANIZATION_ID   Bitwarden organization UUID
  */
 
 'use strict';
@@ -129,13 +129,15 @@ async function cmdList(flags) {
 
 async function cmdGet(key) {
   if (!key) die('get requires a key name');
-  const orgId  = getOrgId();
-  const client = await createClient();
-  const list   = await client.secrets().list(orgId);
-  const index  = buildKeyIndex(list.data);
-  if (!index[key]) die(`Secret '${key}' not found`);
-  const full = await client.secrets().getByIds([index[key].id]);
-  process.stdout.write(full.data[0].value);
+  const orgId   = getOrgId();
+  const client  = await createClient();
+  // fetchAllSecrets uses sync() — a single API call that returns key + value.
+  // This avoids the TOCTOU window of a two-step list()+getByIds() approach.
+  const secrets = await fetchAllSecrets(client, orgId);
+  const secret  = secrets.find(s => s.key === key);
+  if (!secret) die(`Secret '${key}' not found`);
+  if (secret.value === undefined || secret.value === null) die(`Secret '${key}' returned no value`);
+  process.stdout.write(secret.value);
 }
 
 async function cmdSet(key, value, flags) {
@@ -157,10 +159,17 @@ async function cmdSet(key, value, flags) {
   const index    = buildKeyIndex(list.data);
   const existing = index[key];
 
+  // Warn if multiple secrets share the same key (different projects) — first match will be updated
+  const allWithKey = list.data.filter(s => s.key === key);
+  if (allWithKey.length > 1) {
+    console.error(`WARN: ${allWithKey.length} secrets named '${key}' found across projects — updating the first match`);
+  }
+
   if (existing) {
     // Fetch current to preserve note and projectId if not explicitly overridden
-    const fetched      = await client.secrets().getByIds([existing.id]);
-    const current      = fetched.data[0];
+    const fetched = await client.secrets().getByIds([existing.id]);
+    const current = fetched.data && fetched.data[0];
+    if (!current) die(`Secret '${key}' could not be fetched for update`);
     const finalNote    = noteProvided ? flags.note : current.note;
     const finalProject = projectIds.length > 0 ? projectIds : (current.projectId ? [current.projectId] : []);
     await client.secrets().update(orgId, existing.id, key, value, finalNote, finalProject);
@@ -186,16 +195,32 @@ async function cmdMove(pattern, projectName) {
 
   if (matches.length === 0) die(`No secrets found matching '${pattern}'`);
 
-  await Promise.all(matches.map(secret =>
-    client.secrets().update(orgId, secret.id, secret.key, secret.value, secret.note, [projectId])
-  ));
-  for (const secret of matches) {
-    console.log(`Moved '${secret.key}' -> '${projectName}'`);
+  // Run updates in batches of 5 to avoid overwhelming the BWS rate limit.
+  const BATCH = 5;
+  const results = [];
+  for (let i = 0; i < matches.length; i += BATCH) {
+    const batch = matches.slice(i, i + BATCH);
+    results.push(...await Promise.allSettled(
+      batch.map(secret =>
+        client.secrets().update(orgId, secret.id, secret.key, secret.value, secret.note, [projectId])
+      )
+    ));
+  }
+
+  let moved = 0;
+  for (let i = 0; i < matches.length; i++) {
+    if (results[i].status === 'fulfilled') {
+      console.log(`Moved '${matches[i].key}' -> '${projectName}'`);
+      moved++;
+    } else {
+      console.error(`ERROR: Failed to move '${matches[i].key}': ${results[i].reason?.message || results[i].reason}`);
+    }
   }
 
   if (matches.length > 1) {
-    console.log(`\nMoved ${matches.length} secrets to '${projectName}'`);
+    console.log(`\nMoved ${moved} of ${matches.length} secrets to '${projectName}'`);
   }
+  if (moved < matches.length) process.exit(1);
 }
 
 async function cmdDelete(key) {
@@ -206,8 +231,9 @@ async function cmdDelete(key) {
   const index  = buildKeyIndex(list.data);
   if (!index[key]) die(`Secret '${key}' not found`);
   const result = await client.secrets().delete([index[key].id]);
-  const item   = result.data[0];
-  if (item.error) die(`Failed to delete '${key}': ${item.error}`);
+  const item   = result.data && result.data[0];
+  if (!item)        die(`Failed to delete '${key}': no confirmation from server`);
+  if (item.error)   die(`Failed to delete '${key}': ${item.error}`);
   console.log(`Deleted secret '${key}'`);
 }
 
@@ -239,7 +265,8 @@ async function cmdProjectsDelete(name) {
   const pIndex = buildProjectIndex(list.data);
   if (!pIndex[name]) die(`Project '${name}' not found`);
   const result = await client.projects().delete([pIndex[name].id]);
-  const item   = result.data[0];
+  const item   = result.data && result.data[0];
+  if (!item)      die(`Failed to delete project '${name}': no confirmation from server`);
   if (item.error) die(`Failed to delete project '${name}': ${item.error}`);
   console.log(`Deleted project '${name}'`);
 }
@@ -289,8 +316,8 @@ function cmdHelp() {
 
   console.log();
   console.log('Required environment variables:');
-  console.log('  BWS_ACCESS_TOKEN      Bitwarden SM machine account token');
-  console.log('  BWS_ORGANIZATION_ID   Bitwarden organization UUID');
+  console.log('  HAL_BWS_ACCESS_TOKEN      Bitwarden SM machine account token');
+  console.log('  HAL_BWS_ORGANIZATION_ID   Bitwarden organization UUID');
   console.log();
 }
 
