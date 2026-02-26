@@ -4,8 +4,8 @@
  * Integration tests for secrets-bws and secrets-bws-mcp-wrapper.
  *
  * Requires real Bitwarden SM credentials:
- *   BWS_ACCESS_TOKEN      machine account token
- *   BWS_ORGANIZATION_ID   organization UUID
+ *   HAL_BWS_ACCESS_TOKEN      machine account token
+ *   HAL_BWS_ORGANIZATION_ID   organization UUID
  *
  * All test resources use a timestamped prefix to avoid collisions and are
  * cleaned up in a finally block even if a test fails.
@@ -25,9 +25,9 @@ const TEST_PROJECT = `secrets-bws-test-${Date.now()}`;
 // ---------------------------------------------------------------------------
 // Skip everything if credentials are not set
 // ---------------------------------------------------------------------------
-const SKIP = !process.env.BWS_ACCESS_TOKEN || !process.env.BWS_ORGANIZATION_ID;
+const SKIP = !process.env.HAL_BWS_ACCESS_TOKEN || !process.env.HAL_BWS_ORGANIZATION_ID;
 if (SKIP) {
-  console.log('Skipping integration tests: BWS_ACCESS_TOKEN and BWS_ORGANIZATION_ID are not set.');
+  console.log('Skipping integration tests: HAL_BWS_ACCESS_TOKEN and HAL_BWS_ORGANIZATION_ID are not set.');
 }
 
 // ---------------------------------------------------------------------------

@@ -33,7 +33,7 @@ a secret:
 | `bws-mcp-wrapper` | Launch an MCP server with secrets injected at startup             |
 
 At runtime, both tools authenticate with Bitwarden SM using a machine account
-token (`BWS_ACCESS_TOKEN`), fetch the secret value by key name, use it, and
+token (`HAL_BWS_ACCESS_TOKEN`), fetch the secret value by key name, use it, and
 discard it. Nothing is written to disk.
 
 ## Use Cases
@@ -142,10 +142,10 @@ npx clawhub install secret-manager-bws
 
 Set these environment variables wherever the agent or container runs:
 
-| Variable              | Description                            |
-|-----------------------|----------------------------------------|
-| `BWS_ACCESS_TOKEN`    | Bitwarden SM machine account token     |
-| `BWS_ORGANIZATION_ID` | Bitwarden organization UUID            |
+| Variable                  | Description                            |
+|---------------------------|----------------------------------------|
+| `HAL_BWS_ACCESS_TOKEN`    | Bitwarden SM machine account token     |
+| `HAL_BWS_ORGANIZATION_ID` | Bitwarden organization UUID            |
 
 No other CLI tools required. The Bitwarden SDK is bundled as an npm dependency.
 

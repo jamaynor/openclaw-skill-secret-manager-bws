@@ -155,23 +155,22 @@ async function cmdSet(key, value, flags) {
     projectIds = [id];
   }
 
-  const list     = await client.secrets().list(orgId);
-  const index    = buildKeyIndex(list.data);
-  const existing = index[key];
+  // fetchAllSecrets uses sync() — returns full detail (key, value, note, projectId) in one call,
+  // avoiding the TOCTOU window of list() + getByIds() and the need for a second fetch on update.
+  const secrets    = await fetchAllSecrets(client, orgId);
+  const index      = buildKeyIndex(secrets);
+  const existing   = index[key];
 
   // Warn if multiple secrets share the same key (different projects) — first match will be updated
-  const allWithKey = list.data.filter(s => s.key === key);
+  const allWithKey = secrets.filter(s => s.key === key);
   if (allWithKey.length > 1) {
     console.error(`WARN: ${allWithKey.length} secrets named '${key}' found across projects — updating the first match`);
   }
 
   if (existing) {
-    // Fetch current to preserve note and projectId if not explicitly overridden
-    const fetched = await client.secrets().getByIds([existing.id]);
-    const current = fetched.data && fetched.data[0];
-    if (!current) die(`Secret '${key}' could not be fetched for update`);
-    const finalNote    = noteProvided ? flags.note : current.note;
-    const finalProject = projectIds.length > 0 ? projectIds : (current.projectId ? [current.projectId] : []);
+    // existing already has .note and .projectId from sync() — no extra getByIds needed
+    const finalNote    = noteProvided ? flags.note : existing.note;
+    const finalProject = projectIds.length > 0 ? projectIds : (existing.projectId ? [existing.projectId] : []);
     await client.secrets().update(orgId, existing.id, key, value, finalNote, finalProject);
     console.log(`Updated secret '${key}'`);
   } else {
@@ -225,11 +224,18 @@ async function cmdMove(pattern, projectName) {
 
 async function cmdDelete(key) {
   if (!key) die('delete requires a key name');
-  const orgId  = getOrgId();
-  const client = await createClient();
-  const list   = await client.secrets().list(orgId);
-  const index  = buildKeyIndex(list.data);
+  const orgId    = getOrgId();
+  const client   = await createClient();
+  const secrets  = await fetchAllSecrets(client, orgId);
+  const index    = buildKeyIndex(secrets);
   if (!index[key]) die(`Secret '${key}' not found`);
+
+  // Warn if multiple secrets share the same key — only the first match will be deleted
+  const allWithKey = secrets.filter(s => s.key === key);
+  if (allWithKey.length > 1) {
+    console.error(`WARN: ${allWithKey.length} secrets named '${key}' found across projects — deleting the first match only`);
+  }
+
   const result = await client.secrets().delete([index[key].id]);
   const item   = result.data && result.data[0];
   if (!item)        die(`Failed to delete '${key}': no confirmation from server`);
@@ -264,7 +270,17 @@ async function cmdProjectsDelete(name) {
   const list   = await client.projects().list(orgId);
   const pIndex = buildProjectIndex(list.data);
   if (!pIndex[name]) die(`Project '${name}' not found`);
-  const result = await client.projects().delete([pIndex[name].id]);
+  const projectId = pIndex[name].id;
+
+  // Warn if secrets are assigned to this project — they will be orphaned after deletion
+  const secrets     = await fetchAllSecrets(client, orgId);
+  const assigned    = secrets.filter(s => s.projectId === projectId);
+  if (assigned.length > 0) {
+    console.error(`WARN: ${assigned.length} secret(s) are assigned to '${name}' and will become unassigned after deletion:`);
+    for (const s of assigned) console.error(`  ${s.key}`);
+  }
+
+  const result = await client.projects().delete([projectId]);
   const item   = result.data && result.data[0];
   if (!item)      die(`Failed to delete project '${name}': no confirmation from server`);
   if (item.error) die(`Failed to delete project '${name}': ${item.error}`);

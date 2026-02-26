@@ -89,8 +89,8 @@ are mandatory:
 
 ## Prerequisites
 
-- `BWS_ACCESS_TOKEN` environment variable set (machine account token)
-- `BWS_ORGANIZATION_ID` environment variable set (organization UUID)
+- `HAL_BWS_ACCESS_TOKEN` environment variable set (machine account token)
+- `HAL_BWS_ORGANIZATION_ID` environment variable set (organization UUID)
 
 No additional CLI tools required - the Bitwarden SDK is bundled as an npm
 dependency.
@@ -102,7 +102,7 @@ dependency.
 - **`bws-mcp-wrapper`** - wraps MCP server launch commands, fetching secrets at
   startup and injecting them as env vars or CLI args. Used in `mcporter.json`.
 
-Both tools authenticate using `BWS_ACCESS_TOKEN` and `BWS_ORGANIZATION_ID` via
+Both tools authenticate using `HAL_BWS_ACCESS_TOKEN` and `HAL_BWS_ORGANIZATION_ID` via
 the bundled `@bitwarden/sdk-napi` SDK. No `bws` CLI install required.
 
 ## CLI Reference - secrets-bws
@@ -189,7 +189,10 @@ exec node server.js
 
 ## Environment Variables
 
-| Variable              | Required | Description                                     |
-|-----------------------|----------|-------------------------------------------------|
-| `BWS_ACCESS_TOKEN`    | Yes      | Bitwarden SM machine account token              |
-| `BWS_ORGANIZATION_ID` | Yes      | Bitwarden organization UUID                     |
+| Variable                  | Required | Source          | Description                        |
+|---------------------------|----------|-----------------|------------------------------------|
+| `HAL_BWS_ACCESS_TOKEN`    | Yes      | Injected (Docker)| Bitwarden SM machine account token |
+| `HAL_BWS_ORGANIZATION_ID` | Yes      | Injected (Docker)| Bitwarden organization UUID        |
+
+These are credentials and must be injected directly into the container — they are
+never stored in `system-config.json`.
