@@ -202,3 +202,66 @@ describe('buildProjectIdMap', () => {
     assert.deepEqual(buildProjectIdMap([]), {});
   });
 });
+
+// ---------------------------------------------------------------------------
+// parseInjections
+// ---------------------------------------------------------------------------
+describe('parseInjections', () => {
+  const { parseInjections } = require('../lib/secrets-bws-wrapper-commands');
+
+  it('parses single --env injection correctly', () => {
+    const result = parseInjections(['--secret', 'MY_KEY', '--env', 'MY_VAR']);
+    assert.deepEqual(result, [{ bwsKey: 'MY_KEY', mode: 'env', target: 'MY_VAR' }]);
+  });
+
+  it('parses single --arg injection correctly', () => {
+    const result = parseInjections(['--secret', 'MY_KEY', '--arg', '--flag']);
+    assert.deepEqual(result, [{ bwsKey: 'MY_KEY', mode: 'arg', target: '--flag' }]);
+  });
+
+  it('parses multiple injections', () => {
+    const result = parseInjections([
+      '--secret', 'KEY1', '--env', 'VAR1',
+      '--secret', 'KEY2', '--arg', '--flag2',
+    ]);
+    assert.deepEqual(result, [
+      { bwsKey: 'KEY1', mode: 'env', target: 'VAR1' },
+      { bwsKey: 'KEY2', mode: 'arg', target: '--flag2' },
+    ]);
+  });
+
+  it('throws when --secret has no following key', () => {
+    assert.throws(
+      () => parseInjections(['--secret']),
+      /--secret requires a key/
+    );
+  });
+
+  it('throws when mode flag is neither --env nor --arg', () => {
+    assert.throws(
+      () => parseInjections(['--secret', 'KEY', '--bad', 'target']),
+      /Expected --env or --arg/
+    );
+  });
+
+  it('throws on unexpected argument', () => {
+    assert.throws(
+      () => parseInjections(['--unknown']),
+      /Unexpected argument/
+    );
+  });
+
+  it('throws when injections list is empty (empty input)', () => {
+    assert.throws(
+      () => parseInjections([]),
+      /No --secret injections/
+    );
+  });
+
+  it('throws when --secret is missing its target (bwsKey and modeFlag present, target absent)', () => {
+    assert.throws(
+      () => parseInjections(['--secret', 'KEY', '--env']),
+      /--secret requires a key/
+    );
+  });
+});

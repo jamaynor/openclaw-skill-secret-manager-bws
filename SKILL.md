@@ -51,6 +51,8 @@ are mandatory:
    secrets-bws set MY_SECRET_KEY "the-secret-value"
    secrets-bws set MY_SECRET_KEY "the-secret-value" --project my-project
    ```
+   Omitting `--project` on an existing secret preserves its current project
+   assignment. There is no `--no-project` flag.
 
 4. **To retrieve a secret value (e.g. in start.sh):**
    ```bash
@@ -84,7 +86,7 @@ are mandatory:
    secrets-bws projects delete old-project
    ```
 
-7. **When a user asks you to configure any credential**, do not ask them to
+8. **When a user asks you to configure any credential**, do not ask them to
    paste it into a file - use `secrets-bws set` and store it in BWS.
 
 ## Prerequisites
