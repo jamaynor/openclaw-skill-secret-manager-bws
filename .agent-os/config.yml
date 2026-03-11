@@ -1,0 +1,4 @@
+version: 3.0
+default_profile: openclaw-skill
+project_dir_name: .agent-os
+installedAt: 2026-03-03T14:53:00Z
