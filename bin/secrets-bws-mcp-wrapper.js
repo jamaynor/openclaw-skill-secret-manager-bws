@@ -11,14 +11,12 @@
  * └── [--secret KEY (--env VAR | --arg FLAG)]... -- <command> [args...]
  */
 
-'use strict';
-
-const {
+import {
   parseInjections,
   fetchSecretsForKeys,
   buildChildEnvAndArgs,
   launchServer,
-} = require('../lib/secrets-bws-wrapper-commands');
+} from '../lib/secrets-bws-wrapper-commands.js';
 // Local die() — bin/ files own process.exit per error boundary convention.
 function die(msg) { console.error(msg); process.exit(1); }
 

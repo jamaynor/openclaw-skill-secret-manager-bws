@@ -1,14 +1,14 @@
-'use strict';
+import { describe, it } from 'node:test';
+import assert from 'node:assert/strict';
 
-const { describe, it } = require('node:test');
-const assert = require('node:assert/strict');
-
-const {
+import {
   globMatch,
   buildKeyIndex,
   buildProjectIndex,
   buildProjectIdMap,
-} = require('../lib/secrets-bws-helpers');
+} from '../lib/secrets-bws-helpers.js';
+
+import { parseInjections } from '../lib/secrets-bws-wrapper-commands.js';
 
 // ---------------------------------------------------------------------------
 // globMatch
@@ -146,8 +146,6 @@ describe('buildProjectIdMap', () => {
 // parseInjections
 // ---------------------------------------------------------------------------
 describe('parseInjections', () => {
-  const { parseInjections } = require('../lib/secrets-bws-wrapper-commands');
-
   it('parses single --env injection correctly', () => {
     const result = parseInjections(['--secret', 'MY_KEY', '--env', 'MY_VAR']);
     assert.deepEqual(result, [{ bwsKey: 'MY_KEY', mode: 'env', target: 'MY_VAR' }]);

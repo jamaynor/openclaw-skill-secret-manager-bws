@@ -1,5 +1,3 @@
-'use strict';
-
 /**
  * Integration tests for secrets-bws and secrets-bws-mcp-wrapper.
  *
@@ -11,13 +9,16 @@
  * cleaned up in a finally block even if a test fails.
  */
 
-const { describe, it, before, after } = require('node:test');
-const assert  = require('node:assert/strict');
-const { execFileSync } = require('child_process');
-const path    = require('path');
+import { describe, it, before, after } from 'node:test';
+import assert from 'node:assert/strict';
+import { execFileSync } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
+import { dirname, join } from 'node:path';
 
-const SECRETS_CLI = path.join(__dirname, '..', 'bin', 'secrets-bws.js');
-const WRAPPER_CLI = path.join(__dirname, '..', 'bin', 'secrets-bws-mcp-wrapper.js');
+const __dirname = dirname(fileURLToPath(import.meta.url));
+
+const SECRETS_CLI = join(__dirname, '..', 'bin', 'secrets-bws.js');
+const WRAPPER_CLI = join(__dirname, '..', 'bin', 'secrets-bws-mcp-wrapper.js');
 
 const TEST_KEY     = `SECRETS_BWS_TEST_${Date.now()}`;
 const TEST_PROJECT = `secrets-bws-test-${Date.now()}`;

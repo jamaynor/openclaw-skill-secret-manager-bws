@@ -15,13 +15,11 @@
  * └── projects [list|create <name>|delete <name>]
  */
 
-'use strict';
-
-const { Command } = require('commander');
-const {
+import { Command } from 'commander';
+import {
   cmdList, cmdGet, cmdSet, cmdMove, cmdDelete,
   cmdProjects, cmdProjectsCreate, cmdProjectsDelete,
-} = require('../lib/secrets-bws-commands');
+} from '../lib/secrets-bws-commands.js';
 
 const program = new Command();
 program
