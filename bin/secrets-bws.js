@@ -2,68 +2,75 @@
 /**
  * secrets-bws
  *
- * Responsibility: CLI entry point and command dispatcher for the secrets-bws
- * management tool. Delegates all command logic to lib/secrets-bws-commands.
+ * Responsibility: CLI entry point for the secrets-bws management tool.
+ * Delegates all command logic to lib/secrets-bws-commands via Commander.js.
  *
  * Public Interface:
  * secrets-bws (CLI)
  * ├── list [--project <name>] [--json]
  * ├── get <key>
  * ├── set <key> <value> [--project <name>] [--note <text>]
- * ├── move <key-or-pattern> <project>
+ * ├── move <pattern> <project>
  * ├── delete <key>
- * ├── projects [list|create <name>|delete <name>]
- * └── help
+ * └── projects [list|create <name>|delete <name>]
  */
 
 'use strict';
 
+const { Command } = require('commander');
 const {
   cmdList, cmdGet, cmdSet, cmdMove, cmdDelete,
   cmdProjects, cmdProjectsCreate, cmdProjectsDelete,
-  cmdHelp,
 } = require('../lib/secrets-bws-commands');
-const { parseFlags, die } = require('../lib/secrets-bws-helpers');
 
-const argv = process.argv.slice(2);
+const program = new Command();
+program
+  .name('secrets-bws')
+  .description('Manage secrets via Bitwarden Secrets Manager');
 
-const COMMANDS = {
-  list:     () => { const { flags } = parseFlags(argv.slice(1)); return cmdList(flags); },
-  get:      () => cmdGet(argv[1]),
-  set:      () => { const { flags, rest } = parseFlags(argv.slice(1)); return cmdSet(rest[0], rest[1], flags); },
-  move:     () => cmdMove(argv[1], argv[2]),
-  delete:   () => cmdDelete(argv[1]),
-  projects: () => dispatchProjects(),
-  help:     () => { cmdHelp(); process.exit(0); },
-};
+program.command('list')
+  .description('List all secrets')
+  .option('--project <name>', 'Filter by project')
+  .option('--json', 'Output as JSON')
+  .action(async (opts) => { await cmdList(opts); });
 
-async function dispatchProjects() {
-  const sub = argv[1];
-  if (!sub || sub === 'list') {
-    await cmdProjects();
-  } else if (sub === 'create') {
-    await cmdProjectsCreate(argv[2]);
-  } else if (sub === 'delete') {
-    await cmdProjectsDelete(argv[2]);
-  } else {
-    die(`Unknown projects subcommand: '${sub}'. Run 'secrets-bws help' for usage.`);
-  }
-}
+program.command('get')
+  .description('Get a secret value by key')
+  .argument('<key>', 'Secret key name')
+  .action(async (key) => { await cmdGet(key); });
 
-async function main() {
-  const cmd = argv[0];
+program.command('set')
+  .description('Create or update a secret')
+  .argument('<key>', 'Secret key name')
+  .argument('<value>', 'Secret value')
+  .option('--project <name>', 'Project to assign')
+  .option('--note <text>', 'Note text')
+  .action(async (key, value, opts) => { await cmdSet(key, value, opts); });
 
-  if (!cmd || cmd === '--help' || cmd === '-h') {
-    cmdHelp();
-    process.exit(0);
-  }
+program.command('move')
+  .description('Move secrets matching pattern to a project')
+  .argument('<pattern>', 'Key pattern (supports * wildcard)')
+  .argument('<project>', 'Target project name')
+  .action(async (pattern, project) => { await cmdMove(pattern, project); });
 
-  const handler = COMMANDS[cmd];
-  if (!handler) die(`Unknown command: '${cmd}'. Run 'secrets-bws help' for usage.`);
-  await handler();
-}
+program.command('delete')
+  .description('Delete a secret by key')
+  .argument('<key>', 'Secret key name')
+  .action(async (key) => { await cmdDelete(key); });
 
-main().catch(err => {
-  console.error('ERROR:', err.message);
+const projectsCmd = program.command('projects').description('Manage BWS projects');
+projectsCmd.command('list').description('List all projects')
+  .action(async () => { await cmdProjects(); });
+projectsCmd.command('create').description('Create a new project')
+  .argument('<name>', 'Project name')
+  .action(async (name) => { await cmdProjectsCreate(name); });
+projectsCmd.command('delete').description('Delete a project')
+  .argument('<name>', 'Project name')
+  .action(async (name) => { await cmdProjectsDelete(name); });
+// Default: bare "projects" with no subcommand = "projects list"
+projectsCmd.action(async () => { await cmdProjects(); });
+
+program.parseAsync(process.argv).catch((err) => {
+  console.error('ERROR: ' + err.message);
   process.exit(1);
 });

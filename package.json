@@ -33,7 +33,8 @@
     "SKILL.md"
   ],
   "dependencies": {
-    "@bitwarden/sdk-napi": "^1.0.0"
+    "@bitwarden/sdk-napi": "^1.0.0",
+    "commander": "14.0.3"
   },
   "engines": {
     "node": ">=18"

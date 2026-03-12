@@ -4,72 +4,11 @@ const { describe, it } = require('node:test');
 const assert = require('node:assert/strict');
 
 const {
-  parseFlags,
   globMatch,
   buildKeyIndex,
   buildProjectIndex,
   buildProjectIdMap,
 } = require('../lib/secrets-bws-helpers');
-
-// ---------------------------------------------------------------------------
-// parseFlags
-// ---------------------------------------------------------------------------
-describe('parseFlags', () => {
-  it('parses a value flag', () => {
-    const { flags, rest } = parseFlags(['--project', 'my-project']);
-    assert.equal(flags.project, 'my-project');
-    assert.deepEqual(rest, []);
-  });
-
-  it('parses a boolean flag (--json)', () => {
-    const { flags, rest } = parseFlags(['--json']);
-    assert.equal(flags.json, true);
-    assert.deepEqual(rest, []);
-  });
-
-  it('throws when a value-taking flag has no value', () => {
-    assert.throws(
-      () => parseFlags(['--note']),
-      /--note requires a value/
-    );
-  });
-
-  it('boolean flags still work with no value (--json)', () => {
-    const { flags } = parseFlags(['--json']);
-    assert.equal(flags.json, true);
-  });
-
-  it('collects positional args into rest', () => {
-    const { flags, rest } = parseFlags(['MY_KEY', 'my-value']);
-    assert.deepEqual(rest, ['MY_KEY', 'my-value']);
-    assert.deepEqual(flags, {});
-  });
-
-  it('mixes positional and flag args', () => {
-    const { flags, rest } = parseFlags(['MY_KEY', 'my-value', '--project', 'prod', '--json']);
-    assert.deepEqual(rest, ['MY_KEY', 'my-value']);
-    assert.equal(flags.project, 'prod');
-    assert.equal(flags.json, true);
-  });
-
-  it('handles flag value that starts with --', () => {
-    // --note is not in BOOLEAN_FLAGS so the next arg is always consumed as the value
-    const { flags } = parseFlags(['--note', '--looks-like-a-flag']);
-    assert.equal(flags.note, '--looks-like-a-flag');
-  });
-
-  it('handles multiple value flags', () => {
-    const { flags } = parseFlags(['--project', 'prod', '--note', 'a secret']);
-    assert.equal(flags.project, 'prod');
-    assert.equal(flags.note, 'a secret');
-  });
-
-  it('returns empty flags and rest for empty input', () => {
-    const { flags, rest } = parseFlags([]);
-    assert.deepEqual(flags, {});
-    assert.deepEqual(rest, []);
-  });
-});
 
 // ---------------------------------------------------------------------------
 // globMatch
