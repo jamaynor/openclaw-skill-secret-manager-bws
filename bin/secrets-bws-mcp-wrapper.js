@@ -19,7 +19,8 @@ const {
   buildChildEnvAndArgs,
   launchServer,
 } = require('../lib/secrets-bws-wrapper-commands');
-const { die } = require('../lib/secrets-bws-helpers');
+// Local die() — bin/ files own process.exit per error boundary convention.
+function die(msg) { console.error(msg); process.exit(1); }
 
 // ---------------------------------------------------------------------------
 // Help
