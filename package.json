@@ -34,10 +34,10 @@
   ],
   "dependencies": {
     "@bitwarden/sdk-napi": "^1.0.0",
-    "commander": "14.0.3"
+    "commander": "^14.0.0"
   },
   "engines": {
-    "node": ">=18"
+    "node": ">=22"
   },
   "type": "module"
 }
